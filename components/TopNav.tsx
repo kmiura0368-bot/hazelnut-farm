@@ -5,13 +5,11 @@ import { usePathname } from 'next/navigation';
 
 const NAV_LINKS = [
   { href: '/', label: 'ホーム', exact: true },
-  { href: '/map', label: '🗺️ 農園マップ' },
-  { href: '/accounting', label: '📒 会計帳簿' },
+  { href: '/karte', label: '🌳 樹木カルテ' },
+  { href: '/farmbook', label: '📋 農園台帳' },
+  { href: '/gallery', label: '🖼️ ギャラリー' },
   { href: '/calendar', label: '📅 カレンダー' },
   { href: '/plan', label: '📋 作業計画' },
-  { href: '/gallery', label: '🖼️ ギャラリー' },
-  { href: '/farmbook', label: '📋 農園台帳' },
-  { href: '/karte', label: '🌳 樹木カルテ' },
 ];
 
 export default function TopNav() {

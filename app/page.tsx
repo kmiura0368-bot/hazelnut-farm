@@ -12,24 +12,24 @@ interface DashboardStats {
 
 const NAV_CARDS = [
   {
-    href: '/map',
+    href: '/karte',
     no: '01',
-    title: '農園マップ',
-    desc: '樹木の位置管理・登録・編集',
-    badge: '利用可能',
-  },
-  {
-    href: '/accounting',
-    no: '02',
-    title: '会計帳簿',
-    desc: '収支記録・グラフ・確定申告',
+    title: '樹木カルテ',
+    desc: '①〜⑫ 樹木別の写真・観察記録',
     badge: '利用可能',
   },
   {
     href: '/farmbook',
-    no: '03',
+    no: '02',
     title: '農園台帳',
     desc: '生育記録・作業履歴・事業資料',
+    badge: '利用可能',
+  },
+  {
+    href: '/gallery',
+    no: '03',
+    title: 'フォトギャラリー',
+    desc: '農園の写真・成長記録',
     badge: '利用可能',
   },
   {
@@ -45,20 +45,6 @@ const NAV_CARDS = [
     title: '作業計画',
     desc: '年間計画・タスク管理',
     badge: '準備中',
-  },
-  {
-    href: '/gallery',
-    no: '06',
-    title: 'フォトギャラリー',
-    desc: '農園の写真・成長記録',
-    badge: '準備中',
-  },
-  {
-    href: '/karte',
-    no: '07',
-    title: '樹木カルテ',
-    desc: '①〜⑫ 樹木別の写真・観察記録',
-    badge: '利用可能',
   },
 ];
 
