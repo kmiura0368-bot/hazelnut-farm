@@ -142,6 +142,28 @@ function TreeDetail({
   const [preview, setPreview] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // AI相談（記録ごとに手動で発火）
+  const [consultingId, setConsultingId] = useState<number | null>(null);
+
+  async function consult(id: number) {
+    setConsultingId(id);
+    try {
+      const res = await fetch('/api/karte/consult', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entry_id: id }),
+      });
+      if (res.ok) {
+        onChanged();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error ?? 'AI相談に失敗しました');
+      }
+    } finally {
+      setConsultingId(null);
+    }
+  }
+
   async function saveMeta() {
     setSavingMeta(true);
     await fetch('/api/karte/trees', {
@@ -304,11 +326,19 @@ function TreeDetail({
                     <p className="text-sm text-green-700 font-semibold mt-1">📏 樹高 {e.height_cm} cm</p>
                   )}
                   {e.body && <p className="text-sm text-gray-700 mt-1 whitespace-pre-line">{e.body}</p>}
-                  {e.ai_feedback && (
+                  {e.ai_feedback ? (
                     <div className="mt-3 bg-green-50 border-l-2 border-green-400 rounded-r-lg p-3">
                       <p className="text-xs font-bold text-green-700 mb-1">🤖 Claudeのフィードバック</p>
                       <p className="text-sm text-gray-700 whitespace-pre-line">{e.ai_feedback}</p>
                     </div>
+                  ) : (
+                    <button
+                      onClick={() => consult(e.id)}
+                      disabled={consultingId === e.id}
+                      className="mt-3 w-full border border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50 rounded-lg py-2 text-sm font-medium transition"
+                    >
+                      {consultingId === e.id ? '🤖 過去の記録を照合中...' : '🤖 この記録をAIに相談する'}
+                    </button>
                   )}
                 </div>
               </div>

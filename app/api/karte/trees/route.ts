@@ -14,7 +14,11 @@ export async function GET() {
     return NextResponse.json(rows);
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: 'カルテ一覧の取得に失敗しました' }, { status: 500 });
+    // 一時的な診断: 実際のエラー内容を返す（原因特定後に削除する）
+    return NextResponse.json(
+      { error: 'カルテ一覧の取得に失敗しました', detail: String(e) },
+      { status: 500 }
+    );
   }
 }
 
