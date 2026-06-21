@@ -1,0 +1,52 @@
+/* ===== 農の暦 — editorial design tokens ===== */
+@import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --paper:      #f3ecdd;
+  --paper-deep: #e9dfc9;
+  --paper-card: #fbf7ee;
+  --ink:        #20281f;
+  --ink-soft:   #4a564370;
+  --ink-mute:   #5c6655;
+  --hazel:      #87572b;
+  --hazel-deep: #5f3c1c;
+  --ochre:      #c2872f;
+  --moss:       #4d6043;
+  --line:       rgba(32, 40, 31, 0.14);
+  --line-soft:  rgba(32, 40, 31, 0.08);
+
+  --font-mincho: 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif;
+  --font-gothic: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-gothic);
+  color: var(--ink);
+}
+
+/* staggered page-load reveal */
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  opacity: 0;
+  animation: riseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* hairline grow on hover for index rows */
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}

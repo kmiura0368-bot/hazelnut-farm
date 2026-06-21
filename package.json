@@ -1,0 +1,35 @@
+{
+  "name": "hazelnut-farm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@vercel/blob": "^0.27.0",
+    "chart.js": "^4.5.1",
+    "heic-convert": "^2.1.0",
+    "next": "latest",
+    "pptxgenjs": "^4.0.1",
+    "react": "latest",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/heic-convert": "^2.1.0",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest",
+    "postcss": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  }
+}

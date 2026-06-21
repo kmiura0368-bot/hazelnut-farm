@@ -1,0 +1,23 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+*.tsbuildinfo
+
+# local database (本番は Turso を使用)
+/data
+
+# env / secrets
+.env
+.env*.local
+
+# ユーザーがアップロードした写真（本番は Vercel Blob、ローカルのみ）
+/public/gallery/*
+!/public/gallery/iwaki.jpg
+
+# misc
+.DS_Store
+*.log
