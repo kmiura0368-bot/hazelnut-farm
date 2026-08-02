@@ -71,6 +71,59 @@ function fmt(d: string) {
   return `${y}年${Number(m)}月${Number(day)}日`;
 }
 
+// アップロード前にスマホ内で写真を縮小・JPEG化する。
+// 畑の弱い電波でも確実に送れるよう、送信量を数百KBまで落とす。
+// iPhoneのHEICも <img> で描画→JPEG化できる（iOS Safari対応）。失敗時は元ファイルを返す。
+async function compressImage(file: File): Promise<File> {
+  try {
+    const url = URL.createObjectURL(file);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = reject;
+      im.src = url;
+    });
+    const maxDim = 1600;
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    const scale = Math.min(1, maxDim / Math.max(w, h));
+    const cw = Math.max(1, Math.round(w * scale));
+    const ch = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = cw;
+    canvas.height = ch;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      URL.revokeObjectURL(url);
+      return file;
+    }
+    ctx.drawImage(img, 0, 0, cw, ch);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/jpeg', 0.7));
+    URL.revokeObjectURL(url);
+    if (!blob || blob.size === 0) return file;
+    const base = file.name.replace(/\.[^.]+$/, '');
+    return new File([blob], `${base}.jpg`, { type: 'image/jpeg' });
+  } catch {
+    return file; // 変換できなければ元のファイルを送る（サーバー側でも縮小する）
+  }
+}
+
+// 弱い電波向け: 失敗しても短い間隔で数回まで再送する。
+async function postWithRetry(url: string, fd: FormData, tries = 3): Promise<Response> {
+  let lastErr: unknown;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(url, { method: 'POST', body: fd });
+      if (res.ok || (res.status >= 400 && res.status < 500)) return res;
+      lastErr = new Error(`status ${res.status}`);
+    } catch (e) {
+      lastErr = e;
+    }
+    await new Promise((r) => setTimeout(r, 1200 * (i + 1)));
+  }
+  throw lastErr;
+}
+
 function daysSince(d: string): number {
   const then = new Date(`${d}T00:00:00`);
   const now = new Date(`${todayLocal()}T00:00:00`);
@@ -396,11 +449,20 @@ function EntryForm({
     fd.append('body', body);
     fd.append('tags', finalTags.join(','));
     if (height) fd.append('height_cm', height);
-    if (file) fd.append('file', file);
-    const res = await fetch('/api/karte/entries', { method: 'POST', body: fd });
-    setSaving(false);
-    if (res.ok) onSaved();
-    else alert('保存に失敗しました');
+    if (file) {
+      // 送信前にスマホ内で縮小（畑の弱い電波でも送れるよう軽くする）
+      const small = await compressImage(file);
+      fd.append('file', small);
+    }
+    try {
+      const res = await postWithRetry('/api/karte/entries', fd);
+      setSaving(false);
+      if (res.ok) onSaved();
+      else alert('保存に失敗しました');
+    } catch {
+      setSaving(false);
+      alert('電波が弱いようです。写真は保存されていません。もう一度お試しください。');
+    }
   }
 
   return (
