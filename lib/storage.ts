@@ -1,13 +1,16 @@
 import path from 'path';
 import fs from 'fs/promises';
+import { run } from './turso';
 
 const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
 /**
  * 画像を保存して、表示用のURL（またはパス）を返す。
- * - 本番(Vercel Blob あり): クラウドに保存し https://... のURLを返す
- * - ローカル: public/gallery に保存し /gallery/xxx を返す
- * HEIC/HEIF は自動でJPEGに変換する。
+ * 保存先の優先順位:
+ *   1. Vercel Blob（BLOB_READ_WRITE_TOKEN があれば）
+ *   2. データベース（image_store テーブル）← 設定不要。/api/image/{id} で配信
+ *   3. ローカルの public/gallery（開発時のフォールバック）
+ * HEIC/HEIF は自動でJPEGに変換し、大きな写真は縮小・圧縮してから保存する。
  */
 export async function saveImage(
   file: File,
@@ -28,25 +31,35 @@ export async function saveImage(
     }
   }
 
-  const storedName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const contentType =
-    ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+  // 縮小・再圧縮（DBに収まるサイズにする。長辺1600px・JPEG品質72）
+  let mime = 'image/jpeg';
+  try {
+    const sharp = (await import('sharp')).default;
+    buffer = await sharp(buffer)
+      .rotate() // EXIFの向きを反映
+      .resize(1600, 1600, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 72 })
+      .toBuffer();
+    ext = 'jpg';
+    mime = 'image/jpeg';
+  } catch (e) {
+    console.error('画像の縮小に失敗しました。元データで保存します。', e);
+    mime =
+      ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+  }
 
+  const storedName = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  // 1. Vercel Blob
   if (BLOB_TOKEN) {
     const { put } = await import('@vercel/blob');
-    const blob = await put(storedName, buffer, {
-      access: 'public',
-      contentType,
-      token: BLOB_TOKEN,
-    });
+    const blob = await put(storedName, buffer, { access: 'public', contentType: mime, token: BLOB_TOKEN });
     return { url: blob.url, storedName };
   }
 
-  // ローカル保存
-  const galleryDir = path.join(process.cwd(), 'public', 'gallery');
-  await fs.mkdir(galleryDir, { recursive: true });
-  await fs.writeFile(path.join(galleryDir, storedName), buffer);
-  return { url: `/gallery/${storedName}`, storedName };
+  // 2. データベース保存（設定不要・本番/ローカル共通）
+  const result = await run('INSERT INTO image_store (mime, data) VALUES (?, ?)', [mime, new Uint8Array(buffer)]);
+  return { url: `/api/image/${result.lastInsertRowid}`, storedName };
 }
 
 /**
@@ -54,6 +67,8 @@ export async function saveImage(
  */
 export async function deleteImage(url: string): Promise<void> {
   if (!url) return;
+
+  // Vercel Blob
   if (url.startsWith('http')) {
     if (BLOB_TOKEN) {
       try {
@@ -65,6 +80,14 @@ export async function deleteImage(url: string): Promise<void> {
     }
     return;
   }
+
+  // データベース保存分
+  const m = url.match(/^\/api\/image\/(\d+)/);
+  if (m) {
+    await run('DELETE FROM image_store WHERE id = ?', [Number(m[1])]);
+    return;
+  }
+
   // ローカル: /gallery/xxx
   const name = url.replace(/^\/gallery\//, '');
   if (!name) return;

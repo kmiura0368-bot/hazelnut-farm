@@ -14,6 +14,7 @@ export function proxy(req: NextRequest) {
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/gallery') ||
+    pathname.startsWith('/api/image/') ||
     pathname === '/manifest.webmanifest' ||
     pathname === '/favicon.ico' ||
     /\.(png|jpg|jpeg|svg|ico|webmanifest)$/.test(pathname)

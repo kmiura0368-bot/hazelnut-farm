@@ -86,6 +86,12 @@ const SCHEMA = `
     ai_feedback TEXT DEFAULT '',
     created_at TEXT DEFAULT (datetime('now', 'localtime'))
   );
+  CREATE TABLE IF NOT EXISTS image_store (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mime TEXT NOT NULL DEFAULT 'image/jpeg',
+    data BLOB NOT NULL,
+    created_at TEXT DEFAULT (datetime('now', 'localtime'))
+  );
 `;
 
 // 既存テーブルへの後付けカラム。既に存在する場合は SQLite が

@@ -18,7 +18,8 @@
     "pptxgenjs": "^4.0.1",
     "react": "latest",
     "react-chartjs-2": "^5.3.1",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@types/heic-convert": "^2.1.0",
