@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(row, { status: 201 });
   } catch (e) {
     console.error(e);
-    return NextResponse.json({ error: '記録の保存に失敗しました' }, { status: 500 });
+    // 一時的な診断: 実際のエラー内容を返す（原因特定後に削除する）
+    return NextResponse.json({ error: '記録の保存に失敗しました', detail: String(e) }, { status: 500 });
   }
 }
