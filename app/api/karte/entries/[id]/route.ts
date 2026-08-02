@@ -21,6 +21,31 @@ export async function PATCH(
   }
 }
 
+// 記録の内容を編集する（日付・ようす・作業・樹高・メモ）。写真は差し替えない。
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { date, body, tags, height_cm } = await req.json();
+    if (!date) {
+      return NextResponse.json({ error: '日付は必須です' }, { status: 400 });
+    }
+    const result = await run(
+      'UPDATE karte_entries SET date = ?, body = ?, tags = ?, height_cm = ? WHERE id = ?',
+      [date, body ?? '', tags ?? '', height_cm ?? null, Number(id)]
+    );
+    if (result.rowsAffected === 0) {
+      return NextResponse.json({ error: '記録が見つかりません' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: '記録の更新に失敗しました' }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

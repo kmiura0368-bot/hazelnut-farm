@@ -15,6 +15,7 @@ interface KarteEntry {
   tree_no: number;
   date: string;
   body: string;
+  tags: string;
   photo_filename: string;
   height_cm: number | null;
   ai_feedback: string;
@@ -59,8 +60,9 @@ function buildHistoryText(tree: KarteTree, past: KarteEntry[], current: KarteEnt
 
   const cur = [
     `■ 今回の記録（${fmt(current.date)}）`,
+    current.tags ? `ようす・作業: ${current.tags.split(',').join('、')}` : null,
     current.height_cm != null ? `樹高: ${current.height_cm}cm` : null,
-    current.body ? `観察: ${current.body}` : '観察コメントなし',
+    current.body ? `観察: ${current.body}` : null,
     current.photo_filename ? '※今回の写真を添付しています。' : null,
   ]
     .filter(Boolean)
@@ -74,10 +76,11 @@ function buildHistoryText(tree: KarteTree, past: KarteEntry[], current: KarteEnt
     .map((e) => {
       const parts = [
         `・${fmt(e.date)}`,
+        e.tags ? e.tags.split(',').join('、') : null,
         e.height_cm != null ? `樹高${e.height_cm}cm` : null,
-        e.body ? e.body : '（コメントなし）',
+        e.body || null,
       ].filter(Boolean);
-      return parts.join(' / ');
+      return parts.length > 1 ? parts.join(' / ') : `${parts[0]} /（記録なし）`;
     })
     .join('\n');
 

@@ -88,6 +88,13 @@ const SCHEMA = `
   );
 `;
 
+// 既存テーブルへの後付けカラム。既に存在する場合は SQLite が
+// "duplicate column name" で失敗するので、その分だけ握りつぶす。
+// (CREATE TABLE IF NOT EXISTS は既存テーブルに新カラムを足してくれないため必要)
+const MIGRATIONS = [
+  `ALTER TABLE karte_entries ADD COLUMN tags TEXT DEFAULT ''`,
+];
+
 // 固定IDを付与し、何度実行しても重複しない（INSERT OR IGNORE）初期データ。
 // 本番では複数サーバーが同時に初期化を走らせるため、冪等(idempotent)であることが必須。
 const GROWTH_SEED = [
@@ -109,6 +116,14 @@ async function ensureSchema(): Promise<void> {
       const statements = SCHEMA.split(';').map((s) => s.trim()).filter(Boolean);
       for (const stmt of statements) {
         await client.execute(stmt);
+      }
+      // 後付けカラムの適用（既に在れば無視）
+      for (const stmt of MIGRATIONS) {
+        try {
+          await client.execute(stmt);
+        } catch (e) {
+          if (!String(e).includes('duplicate column name')) throw e;
+        }
       }
       // 12本のカルテを初期生成（tree_noは主キー → OR IGNORE で冪等）
       for (let i = 1; i <= 12; i++) {

@@ -7,6 +7,7 @@ export interface KarteEntry {
   tree_no: number;
   date: string;
   body: string;
+  tags: string; // カンマ区切り（例: "元気,新芽"）
   photo_filename: string;
   height_cm: number | null;
   ai_feedback: string;
@@ -39,6 +40,7 @@ export async function POST(req: NextRequest) {
     const treeNo = Number(formData.get('tree_no'));
     const date = formData.get('date') as string;
     const body = (formData.get('body') as string) ?? '';
+    const tags = (formData.get('tags') as string) ?? '';
     const heightRaw = formData.get('height_cm') as string | null;
     const height_cm = heightRaw && heightRaw !== '' ? Number(heightRaw) : null;
     const file = formData.get('file') as File | null;
@@ -59,8 +61,8 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await run(
-      'INSERT INTO karte_entries (tree_no, date, body, photo_filename, height_cm) VALUES (?, ?, ?, ?, ?)',
-      [treeNo, date, body, photo_filename, height_cm]
+      'INSERT INTO karte_entries (tree_no, date, body, tags, photo_filename, height_cm) VALUES (?, ?, ?, ?, ?, ?)',
+      [treeNo, date, body, tags, photo_filename, height_cm]
     );
     const row = await get<KarteEntry>('SELECT * FROM karte_entries WHERE id = ?', [result.lastInsertRowid]);
     return NextResponse.json(row, { status: 201 });
