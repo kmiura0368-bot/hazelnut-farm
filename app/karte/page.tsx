@@ -642,7 +642,6 @@ function TreeDetail({
   const [editingMeta, setEditingMeta] = useState(!tree.variety);
   const [savingMeta, setSavingMeta] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [consultingId, setConsultingId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const lastHeight = entries.find((e) => e.height_cm != null)?.height_cm ?? null;
@@ -656,24 +655,6 @@ function TreeDetail({
         .reverse(),
     [entries]
   );
-
-  async function consult(id: number) {
-    setConsultingId(id);
-    try {
-      const res = await fetch('/api/karte/consult', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ entry_id: id }),
-      });
-      if (res.ok) onChanged();
-      else {
-        const data = await res.json().catch(() => ({}));
-        alert(data.error ?? 'AI相談に失敗しました');
-      }
-    } finally {
-      setConsultingId(null);
-    }
-  }
 
   async function saveMeta() {
     setSavingMeta(true);
@@ -806,8 +787,6 @@ function TreeDetail({
                 <EntryCard
                   key={e.id}
                   entry={e}
-                  consulting={consultingId === e.id}
-                  onConsult={() => consult(e.id)}
                   onEdit={() => setEditingId(e.id)}
                   onDelete={() => deleteEntry(e.id)}
                 />
@@ -847,19 +826,14 @@ function TagChips({ tags }: { tags: string[] }) {
 
 function EntryCard({
   entry: e,
-  consulting,
-  onConsult,
   onEdit,
   onDelete,
 }: {
   entry: KarteEntry;
-  consulting: boolean;
-  onConsult: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const tags = parseTags(e.tags);
-  const hasWarn = tags.some((t) => WARN_TAGS.has(t));
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -883,24 +857,11 @@ function EntryCard({
         {e.height_cm != null && <p className="text-sm text-green-700 font-semibold mt-2">📏 樹高 {e.height_cm} cm</p>}
         {e.body && <p className="text-sm text-gray-700 mt-1.5 whitespace-pre-line">{e.body}</p>}
 
-        {e.ai_feedback ? (
+        {e.ai_feedback && (
           <div className="mt-3 bg-green-50 border-l-2 border-green-400 rounded-r-lg p-3">
             <p className="text-xs font-bold text-green-700 mb-1">🤖 Claudeのフィードバック</p>
             <p className="text-sm text-gray-700 whitespace-pre-line">{e.ai_feedback}</p>
           </div>
-        ) : (
-          <button
-            onClick={onConsult}
-            disabled={consulting}
-            className={
-              'mt-3 w-full rounded-lg py-2 text-sm font-medium transition disabled:opacity-50 border ' +
-              (hasWarn
-                ? 'bg-amber-50 border-amber-300 text-amber-800 hover:bg-amber-100'
-                : 'border-green-200 text-green-700 hover:bg-green-50')
-            }
-          >
-            {consulting ? '🤖 過去の記録を照合中...' : hasWarn ? '🤖 気になる点をAIに相談する' : '🤖 この記録をAIに相談する'}
-          </button>
         )}
       </div>
     </div>
